@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Pokedex</title>
+	
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+	
+	<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body onload="getPokemon()">
+	<div class="pokedex">
+		<div id="bgColor" class="pokemon-display">
+			<form name="pokemonKeySend" method="POST" action="">
+				<input type="text" id="pokemonId" name="pokemonId" class="pokemon-id" value="" onKeyUp="pokemonKeyId()"/>
+			</form>
+			<img id="pokemonImg" src="#" alt="Pokemon Image">
+			<img class="pokeball" src="img/pokeball.png" alt="Pokeball">
+		</div>
+		<div class="pokemon-info">
+			<div class="pokemon-name">
+				<h2 id="pokemonName"></h2>
+			</div>
+			
+			<div class="pokemon-type" id="pokemonType"></div>
+			<p class="pokemon-description" id="pokemonDescription"></p>
+			
+			<div class="buttons-container">
+				<div class="button btn-prev" onClick="previous()"><i class="fa-solid fa-caret-left"></i></div>
+				<div class="button btn-next" onClick="next()"><i class="fa-solid fa-caret-right"></i></div>
+				<div class="button btn-random" onClick="random()"><i class="fa-solid fa-shuffle"></i></div>
+			</div>
+		</div>
+	</div>
+	
+	<script>
+		var timer = setInterval(function(){random()}, 30000);
+		
+		function previous() {
+			let pokemonId = document.pokemonKeySend.pokemonId.value;
+			pokemonId = (Number(pokemonId)-1 <= 1) ? 1 : Number(pokemonId)-1;
+			getPokemon(pokemonId);
+			resetInterval();
+		};
+
+		function next() {
+			let pokemonId = document.pokemonKeySend.pokemonId.value;
+			pokemonId = (Number(pokemonId)+1 >= 898) ? 898 : Number(pokemonId)+1;
+			getPokemon(pokemonId);
+			resetInterval();
+		};
+		
+		function random() {
+			let pokemonId = document.pokemonKeySend.pokemonId.value;
+			pokemonId = Math.floor(Math.random() * 898) + 1;
+			getPokemon(pokemonId);
+			resetInterval();
+		};
+		
+		function pokemonKeyId() {
+			let pokemonId = document.pokemonKeySend.pokemonId.value;
+			pokemonId = (pokemonId <= 1) ? 1 : pokemonId;
+			pokemonId = (pokemonId >= 898) ? 898 : pokemonId;
+			getPokemon(pokemonId);
+		};
+		
+		function resetInterval() {
+			clearInterval(timer);
+			timer = setInterval(function(){random()}, 30000);
+		};
+		
+
+		function getPokemon(id = 1) {  
+			typesJson = '{'+
+				'"bug": "bug",'+
+				'"dark": "dark",'+
+				'"dragon": "dragon",'+
+				'"electric": "electric",'+
+				'"fairy": "fairy",'+
+				'"fighting": "fighting",'+
+				'"fire": "fire",'+
+				'"flying": "flying",'+
+				'"ghost": "ghost",'+
+				'"grass": "grass",'+
+				'"ground": "ground",'+
+				'"ice": "ice",'+
+				'"normal": "normal",'+
+				'"poison": "poison",'+
+				'"psychic": "psychic",'+
+				'"rock": "rock",'+
+				'"steel": "steel",'+
+				'"water": "water"'+
+			'}';
+
+			let _endpoint = ["pokemon", "pokemon-species"];
+			let pokemonData = getData(_endpoint[0]);
+			let pokemonInfo = getData(_endpoint[1]);
+			function getData(endpointName) {
+				let pokemonApi = "https://pokeapi.co/api/v2/" + endpointName + "/"+id;
+				let pokemonreq = new XMLHttpRequest();
+				pokemonreq.open("GET", pokemonApi, false);
+				pokemonreq.send();
+				let pokemonResponse = JSON.parse(pokemonreq.responseText);
+				return pokemonResponse;
+			}
+
+			document.getElementById("pokemonId").value = pokemonData.id;
+			document.getElementById("pokemonName").innerHTML = pokemonData.name;
+			var pokeDescription = pokemonInfo.flavor_text_entries;
+			Object.keys(pokeDescription).forEach(key => {
+				if (pokeDescription[key].language.name == "en"){
+					document.getElementById("pokemonDescription").innerHTML = pokeDescription[key].flavor_text;
+				};
+			});
+			document.getElementById("bgColor").className = "";
+			document.getElementById("bgColor").classList.add("pokemon-display",pokemonInfo.color.name);
+			document.getElementById("pokemonImg").src = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/"+pokemonData.id+".png";
+			document.getElementById("pokemonType").innerHTML = "";
+			pokemonTypes = JSON.parse(typesJson);               
+			pokemonData.types.map(item => document.getElementById("pokemonType").innerHTML += "<span class='pokemon-type-chip "+pokemonTypes[item.type.name]+"'>"+pokemonTypes[item.type.name]+"</span>");
+		};
+	</script>
+</body>
+</html>
